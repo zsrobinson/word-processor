@@ -1,18 +1,39 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-var text = "hello world!";
+var text = "";
 var isFocused = false;
 var cursor = text.length;
+var lastAdded = 0;
 
-canvas.addEventListener("focus", () => { isFocused = true; });
+canvas.addEventListener("focus", () => {
+    isFocused = true;
+    lastAdded = Date.now();
+});
 canvas.addEventListener("blur", () => { isFocused = false; });
 canvas.addEventListener("keydown", (e) => {
-    if (e.key === "Backspace") { text = text.slice(0, -1); cursor -= 1; }
-    else if (e.key === "Enter") { text += "\n"; cursor += 1; }
-    else if (e.key === "Shift") { /* no-op */ }
+    lastAdded = Date.now();
+
+    if (e.key === "Backspace") {
+        if (cursor == 0) return;
+        text = text.substring(0, cursor - 1) + text.substring(cursor);
+        cursor -= 1;
+    } else if (e.key === "Enter") {
+        text = text.substring(0, cursor) + "\n" + text.substring(cursor);
+        cursor += 1;
+    } else if (e.key === "Shift") { /* no-op */ }
     else if (e.key === "Meta") { /* no-op */ }
-    else { text += e.key; cursor += 1;} });
+    else if (e.key === "ArrowLeft") {
+        if (cursor == 0) return;
+        cursor -= 1;
+    } else if (e.key === "ArrowRight") { cursor += 1; }
+    else if (e.key === "ArrowUp") { /* no-op */ } 
+    else if (e.key === "ArrowDown") { /* no-op */ } 
+    else { // normal key press
+        text = text.substring(0, cursor) + e.key + text.substring(cursor);
+        cursor += 1;
+    }
+});
 
 function paint() {
     canvas.width = 850/2;
@@ -22,6 +43,12 @@ function paint() {
     ctx.rect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
     ctx.fill();
+
+    // get cursor state
+    const interval = 500;
+    const blink = Math.round((Date.now() - lastAdded) / interval) % 2 == 1;
+    const recentAdd = Date.now() - lastAdded < interval * 1.5;
+    const cursorShowing = recentAdd || blink;
 
     // draw text
     ctx.font = "50px Arial";
@@ -34,26 +61,20 @@ function paint() {
         ctx.fillText(lines[i], 10, lineHeight);
         
         // draw cursor
-        if (cursor <= runningLetterCount + lines[i].length) {
-            const beforeCursor = cursor - runningLetterCount;
-            const textBeforeCursor = lines[i].split(0, beforeCursor);
-            const metrics = ctx.measureText(textBeforeCursor);
+        const relativeCursor = cursor - runningLetterCount;
+        if (cursorShowing && isFocused && 0 <= relativeCursor &&
+            relativeCursor <= lines[i].length) {
+
+            const cursorText = text.substring(runningLetterCount, cursor);
+            const metrics = ctx.measureText(cursorText);
 
             ctx.beginPath();
-            ctx.arc(metrics.width + 10, lineHeight, 2, 0, 2 * Math.PI);
-            ctx.fillStyle = "blue";
+            ctx.rect(metrics.width + 10, lineHeight + metrics.fontBoundingBoxDescent, 5, -metrics.fontBoundingBoxDescent - metrics.fontBoundingBoxAscent);
+            ctx.fillStyle = "black";
             ctx.fill();
         }
 
         runningLetterCount += lines[i].length + 1;
-    }
-
-    // focus indicator
-    if (isFocused) {
-        ctx.beginPath();
-        ctx.arc(5, 5, 2, 0, 2 * Math.PI);
-        ctx.fillStyle = "red";
-        ctx.fill();
     }
 
     requestAnimationFrame(paint);
