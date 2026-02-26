@@ -6,11 +6,17 @@ var isFocused = false;
 var cursor = text.length;
 var lastAdded = 0;
 
+/* EVENT HANDLERS */
+
 canvas.addEventListener("focus", () => {
     isFocused = true;
     lastAdded = Date.now();
 });
-canvas.addEventListener("blur", () => { isFocused = false; });
+
+canvas.addEventListener("blur", () => {
+    isFocused = false;
+});
+
 canvas.addEventListener("keydown", (e) => {
     lastAdded = Date.now();
 
@@ -21,23 +27,31 @@ canvas.addEventListener("keydown", (e) => {
     } else if (e.key === "Enter") {
         text = text.substring(0, cursor) + "\n" + text.substring(cursor);
         cursor += 1;
-    } else if (e.key === "Shift") { /* no-op */ }
-    else if (e.key === "Meta") { /* no-op */ }
-    else if (e.key === "ArrowLeft") {
+    } else if (e.key === "Shift") {
+        /* no-op */
+    } else if (e.key === "Meta") {
+        /* no-op */
+    } else if (e.key === "ArrowLeft") {
         if (cursor == 0) return;
         cursor -= 1;
-    } else if (e.key === "ArrowRight") { cursor += 1; }
-    else if (e.key === "ArrowUp") { /* no-op */ } 
-    else if (e.key === "ArrowDown") { /* no-op */ } 
-    else { // normal key press
+    } else if (e.key === "ArrowRight") {
+        cursor += 1;
+    } else if (e.key === "ArrowUp") {
+        /* no-op */
+    } else if (e.key === "ArrowDown") {
+        /* no-op */
+    } else {
+        // normal key press
         text = text.substring(0, cursor) + e.key + text.substring(cursor);
         cursor += 1;
     }
 });
 
+/* PAINT LOOP */
+
 function paint() {
-    canvas.width = 850/2;
-    canvas.height = 1100/2;
+    canvas.width = 850 / 2;
+    canvas.height = 1100 / 2;
 
     // clear previous contents
     ctx.rect(0, 0, canvas.width, canvas.height);
@@ -56,20 +70,28 @@ function paint() {
     var runningLetterCount = 0;
 
     for (let i = 0; i < lines.length; i++) {
-        const lineHeight = 60 + (i * 50);
-        ctx.fillStyle = "black"; 
+        const lineHeight = 60 + i * 50;
+        ctx.fillStyle = "black";
         ctx.fillText(lines[i], 10, lineHeight);
-        
+
         // draw cursor
         const relativeCursor = cursor - runningLetterCount;
-        if (cursorShowing && isFocused && 0 <= relativeCursor &&
-            relativeCursor <= lines[i].length) {
-
+        if (
+            cursorShowing &&
+            isFocused &&
+            0 <= relativeCursor &&
+            relativeCursor <= lines[i].length
+        ) {
             const cursorText = text.substring(runningLetterCount, cursor);
             const metrics = ctx.measureText(cursorText);
 
             ctx.beginPath();
-            ctx.rect(metrics.width + 10, lineHeight + metrics.fontBoundingBoxDescent, 5, -metrics.fontBoundingBoxDescent - metrics.fontBoundingBoxAscent);
+            ctx.rect(
+                metrics.width + 10,
+                lineHeight + metrics.fontBoundingBoxDescent,
+                5,
+                -metrics.fontBoundingBoxDescent - metrics.fontBoundingBoxAscent,
+            );
             ctx.fillStyle = "black";
             ctx.fill();
         }
