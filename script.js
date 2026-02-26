@@ -47,12 +47,24 @@ canvas.addEventListener("keydown", (e) => {
     }
 });
 
+/* ENTRYPOINT */
+
+function main() {
+    const [pixelWidth, pixelHeight] = [850 / 2, 1100 / 2];
+    canvas.style.width = `${pixelWidth}px`;
+    canvas.style.height = `${pixelHeight}px`;
+
+    const scale = window.devicePixelRatio;
+    canvas.width = Math.floor(pixelWidth * scale);
+    canvas.height = Math.floor(pixelHeight * scale);
+    ctx.scale(scale, scale);
+
+    requestAnimationFrame(paint);
+}
+
 /* PAINT LOOP */
 
 function paint() {
-    canvas.width = 850 / 2;
-    canvas.height = 1100 / 2;
-
     // clear previous contents
     ctx.rect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
@@ -102,4 +114,4 @@ function paint() {
     requestAnimationFrame(paint);
 }
 
-requestAnimationFrame(paint);
+main();
