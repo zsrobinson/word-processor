@@ -2,6 +2,7 @@
     "compilerOptions": {
         "outDir": "./dist",
         "checkJs": true,
-        "target": "esnext"
+        "target": "esnext",
+        "strictNullChecks": true
     }
 }

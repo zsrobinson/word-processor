@@ -4,8 +4,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (
     document.getElementById("canvas")
 );
 
-/** @type {CanvasRenderingContext2D} */
-const ctx = canvas.getContext("2d");
+const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
 var text = "";
 var isFocused = false;
@@ -80,7 +79,7 @@ function paint() {
     const interval = 500;
     const blink = Math.round((Date.now() - lastAdded) / interval) % 2 == 1;
     const recentAdd = Date.now() - lastAdded < interval * 1.5;
-    const cursorShowing = recentAdd || blink;
+    const cursorShowing = isFocused && (recentAdd || blink);
 
     // variables
     const family = "Times New Roman";
@@ -91,34 +90,26 @@ function paint() {
 
     const page = new Page(width, margin);
     const style = new Style(family, size, lineHeight, "black");
-    const paras = text.split("\n").map((t) => new Text(t, style));
+
+    // construct paragraphs from text with letterIndex information
+    /** @type {Text[]} */
+    const paras = [];
+    text.split("\n").reduce((acc, curr) => {
+        paras.push(new Text(curr, style, acc));
+        return acc + curr.length + 1; // extra 1 for newline char
+    }, 0);
+
+    // convert paragraphs into individual lines
     const lines = paras.map((p) => renderPara(ctx, p, page)).flat();
-    lines.reduce((acc, curr) => paintLine(ctx, curr, page, acc), page.margin);
+
+    // paint lines onto the screen
+    lines.reduce(
+        (acc, curr) =>
+            paintLine(ctx, curr, page, acc, cursorShowing ? cursor : undefined),
+        page.margin,
+    );
 
     requestAnimationFrame(paint);
 }
 
 main();
-
-// const relativeCursor = cursor - runningLetterCount;
-// if (
-//     cursorShowing &&
-//     isFocused &&
-//     0 <= relativeCursor &&
-//     relativeCursor <= para.length
-// ) {
-//     const cursorText = para.substring(relativeCursor, cursor);
-//     const metrics = ctx.measureText(cursorText);
-
-//     ctx.beginPath();
-//     ctx.rect(
-//         metrics.width + margin,
-//         offset + metrics.fontBoundingBoxDescent,
-//         size / 10,
-//         -metrics.fontBoundingBoxDescent - metrics.fontBoundingBoxAscent,
-//     );
-//     ctx.fillStyle = "black";
-//     ctx.fill();
-// }
-
-// runningLetterCount += 2;

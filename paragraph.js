@@ -2,10 +2,12 @@ export class Text {
     /**
      * @param {string} content
      * @param {Style} style
+     * @param {number} letterIndex
      */
-    constructor(content, style) {
+    constructor(content, style, letterIndex) {
         this.content = content;
         this.style = style;
+        this.letterIndex = letterIndex;
     }
 }
 
@@ -49,7 +51,8 @@ export function renderPara(ctx, para, page) {
 
     let start = 0;
     let end = 0;
-    ``;
+    let letterIndex = para.letterIndex;
+
     for (let curr = 0; curr < words.length; curr++) {
         end++;
 
@@ -58,8 +61,10 @@ export function renderPara(ctx, para, page) {
             ctx.measureText(words.slice(start, end + 1).join(" ")).width >
                 page.textWidth
         ) {
-            const content = words.slice(start, end).join(" ");
-            lines.push(new Text(content, para.style));
+            let content = words.slice(start, end).join(" ");
+
+            lines.push(new Text(content, para.style, letterIndex));
+            letterIndex += content.length + 1;
             start = end;
         }
     }
@@ -72,11 +77,33 @@ export function renderPara(ctx, para, page) {
  * @param {Text} line
  * @param {Page} page
  * @param {number} vOffset
+ * @param {number | undefined} cursor
  */
-export function paintLine(ctx, line, page, vOffset) {
+export function paintLine(ctx, line, page, vOffset, cursor) {
     ctx.font = `${line.style.size}px ${line.style.family}`;
-    ctx.fillStyle = line.style.color;
 
+    // draw cursor
+    if (
+        cursor !== undefined &&
+        line.letterIndex <= cursor &&
+        cursor <= line.letterIndex + line.content.length
+    ) {
+        const cursorText = line.content.slice(0, cursor - line.letterIndex);
+        const metrics = ctx.measureText(cursorText);
+
+        ctx.beginPath();
+        ctx.rect(
+            metrics.width + page.margin,
+            vOffset,
+            line.style.size / 10,
+            metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent,
+        );
+        ctx.fillStyle = "teal";
+        ctx.fill();
+    }
+
+    // draw text
+    ctx.fillStyle = line.style.color;
     const metrics = ctx.measureText(line.content);
     vOffset += metrics.fontBoundingBoxAscent;
 
