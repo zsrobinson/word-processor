@@ -1,0 +1,7 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist",
+        "checkJs": true,
+        "target": "esnext"
+    }
+}

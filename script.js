@@ -1,10 +1,17 @@
-const canvas = document.getElementById("canvas");
+import { Text, Style, Page, renderPara, paintLine } from "./paragraph.js";
+
+const canvas = /** @type {HTMLCanvasElement} */ (
+    document.getElementById("canvas")
+);
+
+/** @type {CanvasRenderingContext2D} */
 const ctx = canvas.getContext("2d");
 
 var text = "";
 var isFocused = false;
 var cursor = text.length;
 var lastAdded = 0;
+const [width, height] = [850 / 2, 1100 / 2]; // 8.5x11 inches
 
 /* EVENT HANDLERS */
 
@@ -50,13 +57,12 @@ canvas.addEventListener("keydown", (e) => {
 /* ENTRYPOINT */
 
 function main() {
-    const [pixelWidth, pixelHeight] = [850 / 2, 1100 / 2];
-    canvas.style.width = `${pixelWidth}px`;
-    canvas.style.height = `${pixelHeight}px`;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
 
     const scale = window.devicePixelRatio;
-    canvas.width = Math.floor(pixelWidth * scale);
-    canvas.height = Math.floor(pixelHeight * scale);
+    canvas.width = Math.floor(width * scale);
+    canvas.height = Math.floor(height * scale);
     ctx.scale(scale, scale);
 
     requestAnimationFrame(paint);
@@ -76,42 +82,43 @@ function paint() {
     const recentAdd = Date.now() - lastAdded < interval * 1.5;
     const cursorShowing = recentAdd || blink;
 
-    // draw text
-    ctx.font = "50px Arial";
-    const lines = text.split("\n");
-    var runningLetterCount = 0;
+    // variables
+    const family = "Times New Roman";
+    const sizePt = 48;
+    const size = (100 / 2 / 72) * sizePt;
+    const margin = 100 / 2; // 1 inch
+    const lineHeight = 1;
 
-    for (let i = 0; i < lines.length; i++) {
-        const lineHeight = 60 + i * 50;
-        ctx.fillStyle = "black";
-        ctx.fillText(lines[i], 10, lineHeight);
-
-        // draw cursor
-        const relativeCursor = cursor - runningLetterCount;
-        if (
-            cursorShowing &&
-            isFocused &&
-            0 <= relativeCursor &&
-            relativeCursor <= lines[i].length
-        ) {
-            const cursorText = text.substring(runningLetterCount, cursor);
-            const metrics = ctx.measureText(cursorText);
-
-            ctx.beginPath();
-            ctx.rect(
-                metrics.width + 10,
-                lineHeight + metrics.fontBoundingBoxDescent,
-                5,
-                -metrics.fontBoundingBoxDescent - metrics.fontBoundingBoxAscent,
-            );
-            ctx.fillStyle = "black";
-            ctx.fill();
-        }
-
-        runningLetterCount += lines[i].length + 1;
-    }
+    const page = new Page(width, margin);
+    const style = new Style(family, size, lineHeight, "black");
+    const paras = text.split("\n").map((t) => new Text(t, style));
+    const lines = paras.map((p) => renderPara(ctx, p, page)).flat();
+    lines.reduce((acc, curr) => paintLine(ctx, curr, page, acc), page.margin);
 
     requestAnimationFrame(paint);
 }
 
 main();
+
+// const relativeCursor = cursor - runningLetterCount;
+// if (
+//     cursorShowing &&
+//     isFocused &&
+//     0 <= relativeCursor &&
+//     relativeCursor <= para.length
+// ) {
+//     const cursorText = para.substring(relativeCursor, cursor);
+//     const metrics = ctx.measureText(cursorText);
+
+//     ctx.beginPath();
+//     ctx.rect(
+//         metrics.width + margin,
+//         offset + metrics.fontBoundingBoxDescent,
+//         size / 10,
+//         -metrics.fontBoundingBoxDescent - metrics.fontBoundingBoxAscent,
+//     );
+//     ctx.fillStyle = "black";
+//     ctx.fill();
+// }
+
+// runningLetterCount += 2;
