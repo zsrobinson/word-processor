@@ -4,17 +4,32 @@ const canvas = /** @type {HTMLCanvasElement} */ (
     document.getElementById("canvas")
 );
 
+const zoomSelect = /** @type {HTMLSelectElement} */ (
+    document.getElementById("zoom-select")
+);
+
+const familySelect = /** @type {HTMLSelectElement} */ (
+    document.getElementById("family-select")
+);
+
+const sizeSelect = /** @type {HTMLSelectElement} */ (
+    document.getElementById("size-select")
+);
+
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
-var text = "";
+var text = "Lorem ipsum...";
 var isFocused = false;
 var cursor = text.length;
 var lastAdded = 0;
-const [width, height] = [850 / 2, 1100 / 2]; // 8.5x11 inches
+
+var zoom = 100;
+var family = "serif";
+var size = 12;
 
 /* EVENT HANDLERS */
 
-canvas.addEventListener("focus", () => {
+canvas.addEventListener("focus", (e) => {
     isFocused = true;
     lastAdded = Date.now();
 });
@@ -23,7 +38,20 @@ canvas.addEventListener("blur", () => {
     isFocused = false;
 });
 
+zoomSelect.addEventListener("change", (e) => {
+    zoom = Number(/** @type {HTMLSelectElement} */ (e.target).value);
+});
+
+familySelect.addEventListener("change", (e) => {
+    family = /** @type {HTMLSelectElement} */ (e.target).value;
+});
+
+sizeSelect.addEventListener("change", (e) => {
+    size = Number(/** @type {HTMLSelectElement} */ (e.target).value);
+});
+
 canvas.addEventListener("keydown", (e) => {
+    e.preventDefault();
     lastAdded = Date.now();
 
     if (e.key === "Backspace") {
@@ -41,7 +69,7 @@ canvas.addEventListener("keydown", (e) => {
         if (cursor == 0) return;
         cursor -= 1;
     } else if (e.key === "ArrowRight") {
-        cursor += 1;
+        if (cursor < text.length) cursor += 1;
     } else if (e.key === "ArrowUp") {
         /* no-op */
     } else if (e.key === "ArrowDown") {
@@ -56,20 +84,23 @@ canvas.addEventListener("keydown", (e) => {
 /* ENTRYPOINT */
 
 function main() {
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-
-    const scale = window.devicePixelRatio;
-    canvas.width = Math.floor(width * scale);
-    canvas.height = Math.floor(height * scale);
-    ctx.scale(scale, scale);
-
     requestAnimationFrame(paint);
 }
 
 /* PAINT LOOP */
 
 function paint() {
+    const inch = 100 * (zoom / 100);
+    const [width, height] = [8.5 * inch, 11 * inch]; // 8.5x11 inches
+
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+
+    const scale = window.devicePixelRatio * 2;
+    canvas.width = Math.floor(width * scale);
+    canvas.height = Math.floor(height * scale);
+    ctx.scale(scale, scale);
+
     // clear previous contents
     ctx.rect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
@@ -82,14 +113,12 @@ function paint() {
     const cursorShowing = isFocused && (recentAdd || blink);
 
     // variables
-    const family = "Times New Roman";
-    const sizePt = 48;
-    const size = (100 / 2 / 72) * sizePt;
-    const margin = 100 / 2; // 1 inch
+    const sizePx = (inch / 72) * size;
+    const margin = inch; // 1 inch
     const lineHeight = 1;
 
     const page = new Page(width, margin);
-    const style = new Style(family, size, lineHeight, "black");
+    const style = new Style(family, sizePx, lineHeight, "black");
     const paras = text.split("\n").map((t) => new Para(t, style));
 
     // convert paragraphs into individual lines
