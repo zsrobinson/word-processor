@@ -1,4 +1,4 @@
-import { Text, Style, Page, renderPara, paintLine } from "./paragraph.js";
+import { Para, Line, Style, Page, renderPara, paintLine } from "./paragraph.js";
 
 const canvas = /** @type {HTMLCanvasElement} */ (
     document.getElementById("canvas")
@@ -90,17 +90,16 @@ function paint() {
 
     const page = new Page(width, margin);
     const style = new Style(family, size, lineHeight, "black");
-
-    // construct paragraphs from text with letterIndex information
-    /** @type {Text[]} */
-    const paras = [];
-    text.split("\n").reduce((acc, curr) => {
-        paras.push(new Text(curr, style, acc));
-        return acc + curr.length + 1; // extra 1 for newline char
-    }, 0);
+    const paras = text.split("\n").map((t) => new Para(t, style));
 
     // convert paragraphs into individual lines
-    const lines = paras.map((p) => renderPara(ctx, p, page)).flat();
+    /** @type {Line[]} */
+    const lines = [];
+    paras.reduce((acc, curr) => {
+        const { paraLines, letterIndex } = renderPara(ctx, curr, page, acc);
+        lines.push(...paraLines);
+        return letterIndex;
+    }, 0);
 
     // paint lines onto the screen
     lines.reduce(

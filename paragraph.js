@@ -1,4 +1,15 @@
-export class Text {
+export class Para {
+    /**
+     * @param {string} content
+     * @param {Style} style
+     */
+    constructor(content, style) {
+        this.content = content;
+        this.style = style;
+    }
+}
+
+export class Line {
     /**
      * @param {string} content
      * @param {Style} style
@@ -39,19 +50,19 @@ export class Page {
 
 /**
  * @param {CanvasRenderingContext2D} ctx
- * @param {Text} para
+ * @param {Para} para
  * @param {Page} page
- * @returns {Text[]}
+ * @param {number} letterIndex
+ * @returns {{paraLines: Line[], letterIndex: number}}
  */
-export function renderPara(ctx, para, page) {
-    /** @type {Text[]} */
+export function renderPara(ctx, para, page, letterIndex) {
+    /** @type {Line[]} */
     const lines = [];
     const words = para.content.split(" ");
     ctx.font = `${para.style.size}px ${para.style.family}`;
 
     let start = 0;
     let end = 0;
-    let letterIndex = para.letterIndex;
 
     for (let curr = 0; curr < words.length; curr++) {
         end++;
@@ -63,18 +74,18 @@ export function renderPara(ctx, para, page) {
         ) {
             let content = words.slice(start, end).join(" ");
 
-            lines.push(new Text(content, para.style, letterIndex));
+            lines.push(new Line(content, para.style, letterIndex));
             letterIndex += content.length + 1;
             start = end;
         }
     }
 
-    return lines;
+    return { paraLines: lines, letterIndex };
 }
 
 /**
  * @param {CanvasRenderingContext2D} ctx
- * @param {Text} line
+ * @param {Line} line
  * @param {Page} page
  * @param {number} vOffset
  * @param {number | undefined} cursor
