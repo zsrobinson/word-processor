@@ -39,4 +39,5 @@ canvas {
     margin: 25px auto 50px auto;
     display: block;
     width: 100%;
+    cursor: text !important;
 }

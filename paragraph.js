@@ -97,14 +97,17 @@ export function renderPara(ctx, para, page, letterIndex, vOffset) {
 }
 
 /**
+ * Draws a line of text on the canvas at its given vOffset. Also uses its given
+ * letterIndex to draw the cursor if the current index is in range.
+ *
  * @param {CanvasRenderingContext2D} ctx
  * @param {Line} line
  * @param {Page} page
  * @param {number | undefined} cursor
+ * @param {number | undefined} cursorRED
  */
-export function paintLine(ctx, line, page, cursor) {
+export function paintLine(ctx, line, page, cursor, cursorRED) {
     ctx.font = `${line.style.size}px ${line.style.family}`;
-    const metrics = ctx.measureText(line.content);
 
     // draw cursor
     if (
@@ -113,6 +116,7 @@ export function paintLine(ctx, line, page, cursor) {
         cursor <= line.letterIndex + line.content.length
     ) {
         const cursorText = line.content.slice(0, cursor - line.letterIndex);
+        const metrics = ctx.measureText(cursorText);
 
         ctx.beginPath();
         ctx.rect(
@@ -125,7 +129,31 @@ export function paintLine(ctx, line, page, cursor) {
         ctx.fill();
     }
 
+    // draw cursor
+    if (
+        cursorRED !== undefined &&
+        line.letterIndex <= cursorRED &&
+        cursorRED <= line.letterIndex + line.content.length
+    ) {
+        const cursorREDText = line.content.slice(
+            0,
+            cursorRED - line.letterIndex,
+        );
+        const metrics = ctx.measureText(cursorREDText);
+
+        ctx.beginPath();
+        ctx.rect(
+            metrics.width + page.margin,
+            line.vOffset,
+            line.style.size / 10,
+            metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent,
+        );
+        ctx.fillStyle = "red";
+        ctx.fill();
+    }
+
     // draw text
+    const metrics = ctx.measureText(line.content);
     ctx.fillStyle = line.style.color;
     ctx.fillText(
         line.content,

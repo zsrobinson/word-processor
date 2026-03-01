@@ -1,4 +1,5 @@
 import { Doc } from "./document.js";
+import { lorem } from "./lorem.js";
 import { Page, paintLine, Para, Style } from "./paragraph.js";
 
 const canvas = /** @type {HTMLCanvasElement} */ (
@@ -23,15 +24,22 @@ const leadingSelect = /** @type {HTMLSelectElement} */ (
 
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
-var text = "lorem";
+var text = lorem.split("\n\n")[0];
 var isFocused = false;
-var cursor = text.length;
+
 var lastAdded = 0;
+/** @type {number | undefined} */
+var cursor = text.length;
+/** @type {number | undefined} */
+var cursorRED = text.length;
 
 var zoom = 100;
 var family = "serif";
 var size = 12;
 var leading = 1.15;
+
+/** @type {Doc} */
+var doc;
 
 /* EVENT HANDLERS */
 
@@ -91,6 +99,34 @@ canvas.addEventListener("keydown", (e) => {
     }
 });
 
+canvas.addEventListener("mousedown", (e) => {
+    const [x, y] = [e.offsetX, e.offsetY];
+    const closestLine = doc.getClosestLine(y);
+    const closestLetter = doc.getClosestLetter(closestLine, x);
+    cursor = closestLetter;
+    lastAdded = Date.now();
+});
+
+canvas.addEventListener("mouseup", (e) => {
+    const [x, y] = [e.offsetX, e.offsetY];
+    const closestLine = doc.getClosestLine(y);
+    const closestLetter = doc.getClosestLetter(closestLine, x);
+    cursorRED = closestLetter;
+    lastAdded = Date.now();
+
+    if (cursorRED < cursor) {
+        const tmp = cursor;
+        cursor = cursorRED;
+        cursorRED = tmp;
+    } else if (cursorRED === cursor) {
+        cursorRED = undefined;
+    }
+});
+
+canvas.addEventListener("drag", (event) => {
+    console.log("dragging");
+});
+
 /* ENTRYPOINT */
 
 function main() {
@@ -130,10 +166,16 @@ function paint() {
     const style = new Style(family, sizePx, leading, "black");
     const paras = text.split("\n").map((t) => new Para(t, style));
 
-    const doc = new Doc(ctx, page, paras);
+    doc = new Doc(ctx, page, paras);
     const lines = doc.getLines();
     lines.forEach((line) =>
-        paintLine(ctx, line, page, cursorShowing ? cursor : undefined),
+        paintLine(
+            ctx,
+            line,
+            page,
+            cursorShowing ? cursor : undefined,
+            cursorRED,
+        ),
     );
 
     requestAnimationFrame(paint);
