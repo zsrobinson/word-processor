@@ -133,7 +133,7 @@ export function paintLine(ctx, line, page, cursor, cursorRED) {
     }
 
     // draw selection
-    if (cursorRED) {
+    if (cursorRED !== undefined) {
         const cursorREDText = line.content.slice(
             0,
             cursorRED - line.letterIndex,
@@ -150,10 +150,19 @@ export function paintLine(ctx, line, page, cursor, cursorRED) {
                 0,
                 intersect[0] - line.letterIndex,
             );
-            const selectText = line.content.slice(
+            var selectText = line.content.slice(
                 intersect[0] - line.letterIndex,
                 intersect[1] - line.letterIndex,
             );
+
+            // show some space for empty lines
+            if (
+                selectText === "" &&
+                Math.max(cursor, cursorRED) !== line.letterIndex
+            ) {
+                selectText = "  ";
+            }
+
             const beforeMetrics = ctx.measureText(beforeText);
             const selectMetrics = ctx.measureText(selectText);
 

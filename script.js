@@ -24,7 +24,7 @@ const leadingSelect = /** @type {HTMLSelectElement} */ (
 
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
-var text = lorem.split("\n\n")[0];
+var text = lorem;
 var isFocused = false;
 
 var lastAdded = 0;
@@ -68,15 +68,30 @@ leadingSelect.addEventListener("change", (e) => {
     leading = Number(/** @type {HTMLSelectElement} */ (e.target).value);
 });
 
+function removeSelection() {
+    if (cursorRED !== undefined) {
+        text =
+            text.substring(0, Math.min(cursor, cursorRED)) +
+            text.substring(Math.max(cursor, cursorRED), text.length);
+        cursor = Math.min(cursor, cursorRED);
+        cursorRED = undefined;
+    }
+}
+
 canvas.addEventListener("keydown", (e) => {
     e.preventDefault();
     lastAdded = Date.now();
 
     if (e.key === "Backspace") {
         if (cursor == 0) return;
-        text = text.substring(0, cursor - 1) + text.substring(cursor);
-        cursor -= 1;
+        if (cursorRED == undefined) {
+            text = text.substring(0, cursor - 1) + text.substring(cursor);
+            cursor -= 1;
+        } else {
+            removeSelection();
+        }
     } else if (e.key === "Enter") {
+        if (cursorRED !== undefined) removeSelection();
         text = text.substring(0, cursor) + "\n" + text.substring(cursor);
         cursor += 1;
     } else if (e.key === "Shift") {
@@ -86,14 +101,17 @@ canvas.addEventListener("keydown", (e) => {
     } else if (e.key === "ArrowLeft") {
         if (cursor == 0) return;
         cursor -= 1;
+        cursorRED = undefined;
     } else if (e.key === "ArrowRight") {
         if (cursor < text.length) cursor += 1;
+        cursorRED = undefined;
     } else if (e.key === "ArrowUp") {
         /* no-op */
     } else if (e.key === "ArrowDown") {
         /* no-op */
     } else {
         // normal key press
+        if (cursorRED !== undefined) removeSelection();
         text = text.substring(0, cursor) + e.key + text.substring(cursor);
         cursor += 1;
     }
@@ -124,11 +142,6 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mouseup", () => (selecting = false));
-canvas.addEventListener("mouseleave", () => (selecting = false));
-
-canvas.addEventListener("drag", (event) => {
-    console.log("dragging");
-});
 
 /* ENTRYPOINT */
 
