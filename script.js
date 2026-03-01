@@ -96,7 +96,7 @@ function paint() {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
 
-    const scale = window.devicePixelRatio * 2;
+    const scale = window.devicePixelRatio;
     canvas.width = Math.floor(width * scale);
     canvas.height = Math.floor(height * scale);
     ctx.scale(scale, scale);
