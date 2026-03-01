@@ -117,7 +117,7 @@ export function paintLine(ctx, line, page, cursor, cursorRED) {
         cursor <= line.letterIndex + line.content.length;
 
     // draw cursor
-    if (cursorInRange && !cursorRED) {
+    if (cursorInRange && cursorRED === undefined) {
         const cursorText = line.content.slice(0, cursor - line.letterIndex);
         const metrics = ctx.measureText(cursorText);
 

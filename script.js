@@ -97,6 +97,10 @@ canvas.addEventListener("keydown", (e) => {
         /* no-op */
     } else if (e.key === "Meta") {
         /* no-op */
+    } else if (e.key === "Control") {
+        /* no-op */
+    } else if (e.key === "Alt") {
+        /* no-op */
     } else if (e.key === "ArrowLeft") {
         if (cursor == 0) return;
         cursor -= 1;
@@ -105,9 +109,15 @@ canvas.addEventListener("keydown", (e) => {
         if (cursor < text.length) cursor += 1;
         cursorRED = undefined;
     } else if (e.key === "ArrowUp") {
-        /* no-op */
+        const { up, curr } = doc.getClosestLineFromCursor(cursor);
+        const x = doc.getXPositionFromCursor(curr, cursor);
+        const letter = doc.getClosestLetter(up, x);
+        cursor = letter;
     } else if (e.key === "ArrowDown") {
-        /* no-op */
+        const { down, curr } = doc.getClosestLineFromCursor(cursor);
+        const x = doc.getXPositionFromCursor(curr, cursor);
+        const letter = doc.getClosestLetter(down, x);
+        cursor = letter;
     } else {
         // normal key press
         if (cursorRED !== undefined) removeSelection();

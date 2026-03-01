@@ -55,6 +55,42 @@ export class Doc {
     }
 
     /**
+     * @param {number} cursor
+     */
+    getClosestLineFromCursor(cursor) {
+        const lines = this.getLines();
+        var line = 0;
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].letterIndex > cursor) break;
+            line = i;
+        }
+        const curr = /** @type {Line} */ (lines.at(line));
+        return {
+            up: /** @type {Line} */ (lines.at(Math.max(0, line - 1))),
+            curr,
+            down: /** @type {Line} */ (
+                lines.at(Math.min(line + 1, lines.length - 1))
+            ),
+        };
+    }
+
+    /**
+     * @param {Line} line
+     * @param {number} cursor
+     */
+    getXPositionFromCursor(line, cursor) {
+        if (
+            cursor < line.letterIndex ||
+            cursor > line.letterIndex + line.content.length
+        )
+            throw new Error("Cursor outside provided line");
+
+        const text = line.content.slice(0, cursor - line.letterIndex);
+        const metrics = this.ctx.measureText(text);
+        return metrics.width + this.page.margin;
+    }
+
+    /**
      * Returns the closest letterIndex on some line given the provided x value
      * based on the metrics of the text.
      *
