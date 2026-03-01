@@ -105,7 +105,7 @@ export function renderPara(ctx, para, page, letterIndex, vOffset) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {Line} line
  * @param {Page} page
- * @param {number} cursor
+ * @param {number | undefined} cursor
  * @param {number | undefined} cursorRED
  */
 export function paintLine(ctx, line, page, cursor, cursorRED) {
@@ -133,7 +133,8 @@ export function paintLine(ctx, line, page, cursor, cursorRED) {
     }
 
     // draw selection
-    if (cursorRED !== undefined) {
+    // note, cursor should always be defined if cursorRED is
+    if (cursorRED !== undefined && cursor !== undefined) {
         const cursorREDText = line.content.slice(
             0,
             cursorRED - line.letterIndex,

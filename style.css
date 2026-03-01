@@ -19,7 +19,7 @@ body {
         sans-serif;
 }
 
-div {
+body > div {
     height: 50px;
     background: gainsboro;
     border-radius: calc(infinity * 1px);
@@ -27,6 +27,12 @@ div {
     padding: 10px 20px;
     align-items: center;
     gap: 20px;
+    position: sticky;
+    top: 10px;
+}
+
+#spacer {
+    flex-grow: 1;
 }
 
 h1 {

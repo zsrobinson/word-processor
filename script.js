@@ -1,6 +1,6 @@
 import { Doc } from "./document.js";
-import { lorem } from "./lorem.js";
 import { Page, paintLine, Para, Style } from "./paragraph.js";
+import { declaration } from "./placeholder.js";
 
 const canvas = /** @type {HTMLCanvasElement} */ (
     document.getElementById("canvas")
@@ -22,21 +22,34 @@ const leadingSelect = /** @type {HTMLSelectElement} */ (
     document.getElementById("leading-select")
 );
 
+const resetButton = /** @type {HTMLButtonElement} */ (
+    document.getElementById("reset-button")
+);
+
+const saveButton = /** @type {HTMLButtonElement} */ (
+    document.getElementById("save-button")
+);
+
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
-var text = lorem;
+/** @type {string} */
+var text;
 var isFocused = false;
 
 var lastAdded = 0;
-var cursor = text.length;
+var cursor = 0;
 /** @type {number | undefined} */
-var cursorRED = text.length;
+var cursorRED;
 var selecting = false;
 
-var zoom = 100;
+/** @type {number} */
+var zoom;
+/** @type {string} */
 var family = "serif";
-var size = 12;
-var leading = 1.15;
+/** @type {number} */
+var size;
+/** @type {number} */
+var leading;
 
 /** @type {Doc} */
 var doc;
@@ -54,18 +67,40 @@ canvas.addEventListener("blur", () => {
 
 zoomSelect.addEventListener("change", (e) => {
     zoom = Number(/** @type {HTMLSelectElement} */ (e.target).value);
+    saveToLocalStorage();
 });
 
 familySelect.addEventListener("change", (e) => {
     family = /** @type {HTMLSelectElement} */ (e.target).value;
+    saveToLocalStorage();
 });
 
 sizeSelect.addEventListener("change", (e) => {
     size = Number(/** @type {HTMLSelectElement} */ (e.target).value);
+    saveToLocalStorage();
 });
 
 leadingSelect.addEventListener("change", (e) => {
     leading = Number(/** @type {HTMLSelectElement} */ (e.target).value);
+    saveToLocalStorage();
+});
+
+resetButton.addEventListener("click", () => {
+    const yay = window.confirm("Are you sure you want to reset your document?");
+    if (!yay) return;
+
+    text = "";
+    loadDefaults(true);
+    updateHTMLInputs();
+    saveToLocalStorage();
+});
+
+saveButton.addEventListener("click", () => {
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "document.txt";
+    link.click();
 });
 
 function removeSelection() {
@@ -76,6 +111,53 @@ function removeSelection() {
         cursor = Math.min(cursor, cursorRED);
         cursorRED = undefined;
     }
+}
+
+/**
+ * Checks if the generic modifier key is pressed (command on mac, control on
+ * windows). Uses a deprecated property to check which platform you're on.
+ *
+ * @param {KeyboardEvent} e
+ * @return {boolean}
+ * @see {@link https://www.bennadel.com/blog/4090-capturing-keyboard-event-modifiers-across-operating-systems-in-javascript.htm}
+ */
+function modifierKey(e) {
+    const isMacish = /Mac|iPod|iPhone|iPad/.test(window.navigator.platform);
+    return isMacish ? e.metaKey : e.ctrlKey;
+}
+
+function saveToLocalStorage() {
+    localStorage.setItem(
+        "data",
+        JSON.stringify({ text, family, size, leading }),
+    );
+}
+
+function loadFromLocalStorage() {
+    const raw = localStorage.getItem("data");
+    if (raw === null) return;
+    const data = JSON.parse(raw);
+    text = data.text;
+    family = data.family;
+    size = data.size;
+    leading = data.leading;
+}
+
+/** @param {boolean} force  */
+function loadDefaults(force = false) {
+    if (zoom === undefined || force) zoom = 100;
+    if (family === undefined || force) family = "serif";
+    if (size === undefined || force) size = 12;
+    if (leading === undefined || force) leading = 1.15;
+    if (text === undefined || force) text = declaration;
+    cursor = 0;
+}
+
+function updateHTMLInputs() {
+    zoomSelect.value = String(zoom);
+    familySelect.value = family;
+    sizeSelect.value = String(size);
+    leadingSelect.value = String(leading);
 }
 
 canvas.addEventListener("keydown", (e) => {
@@ -101,6 +183,12 @@ canvas.addEventListener("keydown", (e) => {
         /* no-op */
     } else if (e.key === "Alt") {
         /* no-op */
+    } else if (e.key === "CapsLock") {
+        /* no-op */
+    } else if (e.key === "Escape") {
+        /* no-op */
+    } else if (e.key === "Tab") {
+        /* no-op */
     } else if (e.key === "ArrowLeft") {
         if (cursor == 0) return;
         cursor -= 1;
@@ -118,12 +206,39 @@ canvas.addEventListener("keydown", (e) => {
         const x = doc.getXPositionFromCursor(curr, cursor);
         const letter = doc.getClosestLetter(down, x);
         cursor = letter;
+    } else if (e.key === "a" && modifierKey(e)) {
+        cursor = 0;
+        cursorRED = text.length;
+    } else if (e.key === "c" && modifierKey(e)) {
+        if (cursorRED === undefined) return;
+        const data = text.substring(
+            Math.min(cursor, cursorRED),
+            Math.max(cursor, cursorRED),
+        );
+        window.navigator.clipboard.writeText(data);
+    } else if (e.key === "x" && modifierKey(e)) {
+        if (cursorRED === undefined) return;
+        const data = text.substring(
+            Math.min(cursor, cursorRED),
+            Math.max(cursor, cursorRED),
+        );
+        removeSelection();
+        window.navigator.clipboard.writeText(data);
+    } else if (e.key === "v" && modifierKey(e)) {
+        if (cursorRED !== undefined) removeSelection();
+        (async () => {
+            const data = await window.navigator.clipboard.readText();
+            text = text.substring(0, cursor) + data + text.substring(cursor);
+            cursor += data.length;
+        })();
     } else {
         // normal key press
         if (cursorRED !== undefined) removeSelection();
         text = text.substring(0, cursor) + e.key + text.substring(cursor);
         cursor += 1;
     }
+
+    saveToLocalStorage();
 });
 
 canvas.addEventListener("mousedown", (e) => {
@@ -155,6 +270,9 @@ canvas.addEventListener("mouseup", () => (selecting = false));
 /* ENTRYPOINT */
 
 function main() {
+    loadFromLocalStorage();
+    loadDefaults();
+    updateHTMLInputs();
     requestAnimationFrame(paint);
 }
 
@@ -193,7 +311,15 @@ function paint() {
 
     doc = new Doc(ctx, page, paras);
     const lines = doc.getLines();
-    lines.forEach((line) => paintLine(ctx, line, page, cursor, cursorRED));
+    lines.forEach((line) =>
+        paintLine(
+            ctx,
+            line,
+            page,
+            cursorRED || cursorShowing ? cursor : undefined, // blinking
+            cursorRED,
+        ),
+    );
 
     requestAnimationFrame(paint);
 }
