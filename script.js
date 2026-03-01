@@ -83,12 +83,11 @@ canvas.addEventListener("keydown", (e) => {
     lastAdded = Date.now();
 
     if (e.key === "Backspace") {
-        if (cursor == 0) return;
-        if (cursorRED == undefined) {
+        if (cursorRED !== undefined) {
+            removeSelection();
+        } else if (cursor !== 0) {
             text = text.substring(0, cursor - 1) + text.substring(cursor);
             cursor -= 1;
-        } else {
-            removeSelection();
         }
     } else if (e.key === "Enter") {
         if (cursorRED !== undefined) removeSelection();
