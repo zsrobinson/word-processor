@@ -1,3 +1,5 @@
+import { rangeIntersect } from "./set.js";
+
 export class Para {
     /**
      * @param {string} content
@@ -103,18 +105,19 @@ export function renderPara(ctx, para, page, letterIndex, vOffset) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {Line} line
  * @param {Page} page
- * @param {number | undefined} cursor
+ * @param {number} cursor
  * @param {number | undefined} cursorRED
  */
 export function paintLine(ctx, line, page, cursor, cursorRED) {
     ctx.font = `${line.style.size}px ${line.style.family}`;
 
-    // draw cursor
-    if (
+    const cursorInRange =
         cursor !== undefined &&
         line.letterIndex <= cursor &&
-        cursor <= line.letterIndex + line.content.length
-    ) {
+        cursor <= line.letterIndex + line.content.length;
+
+    // draw cursor
+    if (cursorInRange && !cursorRED) {
         const cursorText = line.content.slice(0, cursor - line.letterIndex);
         const metrics = ctx.measureText(cursorText);
 
@@ -129,27 +132,42 @@ export function paintLine(ctx, line, page, cursor, cursorRED) {
         ctx.fill();
     }
 
-    // draw cursor
-    if (
-        cursorRED !== undefined &&
-        line.letterIndex <= cursorRED &&
-        cursorRED <= line.letterIndex + line.content.length
-    ) {
+    // draw selection
+    if (cursorRED) {
         const cursorREDText = line.content.slice(
             0,
             cursorRED - line.letterIndex,
         );
-        const metrics = ctx.measureText(cursorREDText);
+        const REDmetrics = ctx.measureText(cursorREDText);
 
-        ctx.beginPath();
-        ctx.rect(
-            metrics.width + page.margin,
-            line.vOffset,
-            line.style.size / 10,
-            metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent,
+        const intersect = rangeIntersect(
+            [Math.min(cursor, cursorRED), Math.max(cursor, cursorRED)],
+            [line.letterIndex, line.letterIndex + line.content.length],
         );
-        ctx.fillStyle = "red";
-        ctx.fill();
+
+        if (intersect) {
+            const beforeText = line.content.slice(
+                0,
+                intersect[0] - line.letterIndex,
+            );
+            const selectText = line.content.slice(
+                intersect[0] - line.letterIndex,
+                intersect[1] - line.letterIndex,
+            );
+            const beforeMetrics = ctx.measureText(beforeText);
+            const selectMetrics = ctx.measureText(selectText);
+
+            ctx.beginPath();
+            ctx.rect(
+                page.margin + beforeMetrics.width,
+                line.vOffset,
+                selectMetrics.width,
+                REDmetrics.fontBoundingBoxAscent +
+                    REDmetrics.fontBoundingBoxDescent,
+            );
+            ctx.fillStyle = "powderblue";
+            ctx.fill();
+        }
     }
 
     // draw text

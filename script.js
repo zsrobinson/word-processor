@@ -28,10 +28,10 @@ var text = lorem.split("\n\n")[0];
 var isFocused = false;
 
 var lastAdded = 0;
-/** @type {number | undefined} */
 var cursor = text.length;
 /** @type {number | undefined} */
 var cursorRED = text.length;
+var selecting = false;
 
 var zoom = 100;
 var family = "serif";
@@ -103,25 +103,28 @@ canvas.addEventListener("mousedown", (e) => {
     const [x, y] = [e.offsetX, e.offsetY];
     const closestLine = doc.getClosestLine(y);
     const closestLetter = doc.getClosestLetter(closestLine, x);
+    cursorRED = undefined;
     cursor = closestLetter;
     lastAdded = Date.now();
+    selecting = true;
 });
 
-canvas.addEventListener("mouseup", (e) => {
+canvas.addEventListener("mousemove", (e) => {
+    if (!selecting) return;
+
     const [x, y] = [e.offsetX, e.offsetY];
     const closestLine = doc.getClosestLine(y);
     const closestLetter = doc.getClosestLetter(closestLine, x);
     cursorRED = closestLetter;
     lastAdded = Date.now();
 
-    if (cursorRED < cursor) {
-        const tmp = cursor;
-        cursor = cursorRED;
-        cursorRED = tmp;
-    } else if (cursorRED === cursor) {
+    if (cursorRED === cursor) {
         cursorRED = undefined;
     }
 });
+
+canvas.addEventListener("mouseup", () => (selecting = false));
+canvas.addEventListener("mouseleave", () => (selecting = false));
 
 canvas.addEventListener("drag", (event) => {
     console.log("dragging");
@@ -168,15 +171,7 @@ function paint() {
 
     doc = new Doc(ctx, page, paras);
     const lines = doc.getLines();
-    lines.forEach((line) =>
-        paintLine(
-            ctx,
-            line,
-            page,
-            cursorShowing ? cursor : undefined,
-            cursorRED,
-        ),
-    );
+    lines.forEach((line) => paintLine(ctx, line, page, cursor, cursorRED));
 
     requestAnimationFrame(paint);
 }
