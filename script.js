@@ -1,4 +1,5 @@
-import { Para, Line, Style, Page, renderPara, paintLine } from "./paragraph.js";
+import { Doc } from "./document.js";
+import { Page, paintLine, Para, Style } from "./paragraph.js";
 
 const canvas = /** @type {HTMLCanvasElement} */ (
     document.getElementById("canvas")
@@ -16,9 +17,13 @@ const sizeSelect = /** @type {HTMLSelectElement} */ (
     document.getElementById("size-select")
 );
 
+const leadingSelect = /** @type {HTMLSelectElement} */ (
+    document.getElementById("leading-select")
+);
+
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
-var text = "Lorem ipsum...";
+var text = "lorem";
 var isFocused = false;
 var cursor = text.length;
 var lastAdded = 0;
@@ -26,6 +31,7 @@ var lastAdded = 0;
 var zoom = 100;
 var family = "serif";
 var size = 12;
+var leading = 1.15;
 
 /* EVENT HANDLERS */
 
@@ -48,6 +54,10 @@ familySelect.addEventListener("change", (e) => {
 
 sizeSelect.addEventListener("change", (e) => {
     size = Number(/** @type {HTMLSelectElement} */ (e.target).value);
+});
+
+leadingSelect.addEventListener("change", (e) => {
+    leading = Number(/** @type {HTMLSelectElement} */ (e.target).value);
 });
 
 canvas.addEventListener("keydown", (e) => {
@@ -115,26 +125,15 @@ function paint() {
     // variables
     const sizePx = (inch / 72) * size;
     const margin = inch; // 1 inch
-    const lineHeight = 1;
 
     const page = new Page(width, margin);
-    const style = new Style(family, sizePx, lineHeight, "black");
+    const style = new Style(family, sizePx, leading, "black");
     const paras = text.split("\n").map((t) => new Para(t, style));
 
-    // convert paragraphs into individual lines
-    /** @type {Line[]} */
-    const lines = [];
-    paras.reduce((acc, curr) => {
-        const { paraLines, letterIndex } = renderPara(ctx, curr, page, acc);
-        lines.push(...paraLines);
-        return letterIndex;
-    }, 0);
-
-    // paint lines onto the screen
-    lines.reduce(
-        (acc, curr) =>
-            paintLine(ctx, curr, page, acc, cursorShowing ? cursor : undefined),
-        page.margin,
+    const doc = new Doc(ctx, page, paras);
+    const lines = doc.getLines();
+    lines.forEach((line) =>
+        paintLine(ctx, line, page, cursorShowing ? cursor : undefined),
     );
 
     requestAnimationFrame(paint);
