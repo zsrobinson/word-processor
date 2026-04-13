@@ -128,7 +128,7 @@ export function paintLine(ctx, line, page, cursor, cursorRED) {
             line.style.size / 10,
             metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent,
         );
-        ctx.fillStyle = "teal";
+        ctx.fillStyle = "black";
         ctx.fill();
     }
 
@@ -175,7 +175,7 @@ export function paintLine(ctx, line, page, cursor, cursorRED) {
                 REDmetrics.fontBoundingBoxAscent +
                     REDmetrics.fontBoundingBoxDescent,
             );
-            ctx.fillStyle = "powderblue";
+            ctx.fillStyle = "#A9C9FE";
             ctx.fill();
         }
     }

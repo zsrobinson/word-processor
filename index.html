@@ -5,11 +5,35 @@
         <meta charset="UTF-8" />
         <link rel="stylesheet" href="./style.css" />
         <script type="module" src="./script.js" defer></script>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
+            rel="stylesheet"
+        />
+
+        <link rel="icon" type="image/x-icon" href="/favicon.png" />
     </head>
     <body>
-        <div>
-            <h1>Word Processor</h1>
+        <div id="header">
+            <img src="logo.svg" alt="word processor logo" height="36" />
+            <div>
+                <p id="doc-title">Untitled document</p>
+                <div id="toolbar">
+                    <span>File</span>
+                    <span>Edit</span>
+                    <span>View</span>
+                    <span>Insert</span>
+                    <span>Format</span>
+                    <span>Tools</span>
+                    <!-- <span>Extensions</span> -->
+                    <span>Help</span>
+                </div>
+            </div>
+        </div>
 
+        <div id="ribbon">
             <select id="zoom-select" autocomplete="off">
                 <option value="50">50%</option>
                 <option value="75">75%</option>

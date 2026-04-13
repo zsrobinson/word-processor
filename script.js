@@ -2,34 +2,14 @@ import { Doc } from "./document.js";
 import { Page, paintLine, Para, Style } from "./paragraph.js";
 import { declaration } from "./placeholder.js";
 
-const canvas = /** @type {HTMLCanvasElement} */ (
-    document.getElementById("canvas")
-);
-
-const zoomSelect = /** @type {HTMLSelectElement} */ (
-    document.getElementById("zoom-select")
-);
-
-const familySelect = /** @type {HTMLSelectElement} */ (
-    document.getElementById("family-select")
-);
-
-const sizeSelect = /** @type {HTMLSelectElement} */ (
-    document.getElementById("size-select")
-);
-
-const leadingSelect = /** @type {HTMLSelectElement} */ (
-    document.getElementById("leading-select")
-);
-
-const resetButton = /** @type {HTMLButtonElement} */ (
-    document.getElementById("reset-button")
-);
-
-const saveButton = /** @type {HTMLButtonElement} */ (
-    document.getElementById("save-button")
-);
-
+const $ = (/** @type {string} */ id) => document.getElementById(id);
+const canvas = /** @type {HTMLCanvasElement} */ ($("canvas"));
+const zoomSelect = /** @type {HTMLSelectElement} */ ($("zoom-select"));
+const familySelect = /** @type {HTMLSelectElement} */ ($("family-select"));
+const sizeSelect = /** @type {HTMLSelectElement} */ ($("size-select"));
+const leadingSelect = /** @type {HTMLSelectElement} */ ($("leading-select"));
+const resetButton = /** @type {HTMLButtonElement} */ ($("reset-button"));
+const saveButton = /** @type {HTMLButtonElement} */ ($("save-button"));
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 
 /** @type {string} */

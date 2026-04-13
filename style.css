@@ -3,9 +3,10 @@
 }
 
 body {
-    background: whitesmoke;
-    margin: 25px;
+    background: #f8fafd;
+    margin: 12px;
     font-family:
+        "Google Sans",
         system-ui,
         -apple-system,
         BlinkMacSystemFont,
@@ -19,9 +20,9 @@ body {
         sans-serif;
 }
 
-body > div {
-    height: 50px;
-    background: gainsboro;
+#ribbon {
+    height: 40px;
+    background: #f0f4f9;
     border-radius: calc(infinity * 1px);
     display: flex;
     padding: 10px 20px;
@@ -29,6 +30,25 @@ body > div {
     gap: 20px;
     position: sticky;
     top: 10px;
+}
+
+#header {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin: 0 0 8px 8px;
+}
+
+#doc-title {
+    opacity: 75%;
+    font-size: 18px;
+    margin: 0 0 4px 0;
+}
+
+#toolbar {
+    display: flex;
+    gap: 16px;
+    font-size: 14px;
 }
 
 #spacer {
@@ -41,7 +61,7 @@ h1 {
 }
 
 canvas {
-    border: 1px darkgray solid;
+    border: 1px #c4c7c5 solid;
     margin: 25px auto 50px auto;
     display: block;
     width: 100%;
